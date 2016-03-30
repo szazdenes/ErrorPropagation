@@ -2,7 +2,6 @@
 
 AllSteps::AllSteps(QObject *parent) : QObject(parent)
 {
-    size = 1355;
     image = new QImage();
 }
 
@@ -14,10 +13,10 @@ void AllSteps::slotAllStepsStart()
     QString hyp, hypname, picname, ampm, bw;
     int picno;
 
-    int p1_resolution = 20;             // in pixels
-    double p2_resolution = 15;          // in deg
-    double deltoid_resolution = 19.0;    // (deltoid_points+1)**2 points
-    double elev_resolution = 0.2;       // in deg
+    int p1_resolution = 40;             // in pixels
+    double p2_resolution = 30;          // in deg
+    double deltoid_resolution = 9.0;    // (deltoid_points+1)**2 points
+    double elev_resolution = 0.5;       // in deg
 
     QDir folder = QFileDialog::getExistingDirectory();
     QStringList nameList = folder.entryList(QStringList(), QDir::Files | QDir::NoDotAndDotDot);
@@ -433,7 +432,7 @@ void AllSteps::calculateSunPositions(QVector3D sun, QVector3D point1, QVector3D 
 
                                 projected = QVector2D( tan(sunWithErrors.y())*cos(-sunWithErrors.z()) , tan(sunWithErrors.y())*sin(-sunWithErrors.z()) );
 
-                                if(v.y()<Pi/2.0-Pi/16  && projected.length()>R_MIN){ // horizonthoz ne legyen tul kozel (nagyon hosszu arnyek)
+                                if(firstSecond_sun.y()<Pi/2.0-Pi/16  && projected.length()>R_MIN){ // horizonthoz ne legyen tul kozel (nagyon hosszu arnyek)
 
                                     sShadows.append(projected);
                                     paint = sShadows.last();
@@ -501,6 +500,7 @@ void AllSteps::calculateNorthErrors()
 
 void AllSteps::paint()
 {
+    int size = 1355;
     QPainter painter;
     QPen pen;
 
@@ -578,6 +578,9 @@ void AllSteps::loadSecondErrorData()
         }
     }
 
+    secondErrorElevListKeysNum = secondErrorElevList.keys().size();
+    secondErrorAzimuthListKeysNum = secondErrorAzimuthList.keys().size();
+
     QApplication::processEvents();
     emit signalWriteToList("Second error data loaded.");
 
@@ -586,7 +589,7 @@ void AllSteps::loadSecondErrorData()
 QPair<double, double> AllSteps::getSeconStepAzimuthError(double delta, double elev, double th1, double th2)
 {
     QPair<double, double> azimuthResult(-999, -999); /*to be easy to recognise*/
-    for(int j = 0; j < secondErrorAzimuthList.keys().size(); j++){
+    for(int j = 0; j < secondErrorAzimuthListKeysNum; j++){
         QString currentkey = secondErrorAzimuthList.keys().at(j);
         if(delta >= paramRange["delta_" + QString::number(j)].first && delta <= paramRange["delta_" + QString::number(j)].second && elev >= paramRange["elev_" + QString::number(j)].first && elev <= paramRange["elev_" + QString::number(j)].second && th1 >= paramRange["th1_" + QString::number(j)].first && th1 <= paramRange["th1_" + QString::number(j)].second && th2 >= paramRange["th2_" + QString::number(j)].first && th2 <= paramRange["th2_" + QString::number(j)].second){
             azimuthResult.first = secondErrorAzimuthList[currentkey].first;
@@ -600,7 +603,7 @@ QPair<double, double> AllSteps::getSeconStepAzimuthError(double delta, double el
 QPair<double, double> AllSteps::getSeconStepElevError(double delta, double elev, double th1, double th2)
 {
     QPair<double, double> elevResult(-999, -999);
-    for(int j = 0; j < secondErrorAzimuthList.keys().size(); j++){
+    for(int j = 0; j < secondErrorElevListKeysNum; j++){
         QString currentkey = secondErrorAzimuthList.keys().at(j);
         if(delta >= paramRange["delta_" + QString::number(j)].first && delta <= paramRange["delta_" + QString::number(j)].second && elev >= paramRange["elev_" + QString::number(j)].first && elev <= paramRange["elev_" + QString::number(j)].second && th1 >= paramRange["th1_" + QString::number(j)].first && th1 <= paramRange["th1_" + QString::number(j)].second && th2 >= paramRange["th2_" + QString::number(j)].first && th2 <= paramRange["th2_" + QString::number(j)].second){
             elevResult.first = secondErrorElevList[currentkey].first;

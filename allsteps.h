@@ -49,13 +49,9 @@ private:
     double deg_p1, deg_p2, err1, err2;
     QImage *image;
     GeomTransform transform;
-//    QList<QVector2D> toPaint;
-    int size;
 
     /*from thirdstep*/
-//    double detectNorth(double sunElevDeg);
     double getMinRadius(QVector<QVector2D> hyperbola);
-//    void calculateNErrors(QString date, QString ampm, QString bw);
 
     /*from firststep*/
     void initializeHist();
@@ -77,6 +73,7 @@ private:
     QPair<double, double> getSeconStepAzimuthError(double delta, double elev, double th1, double th2);
     QMap<QString, QPair<double, double> > secondErrorElevList, secondErrorAzimuthList;
     QMap<QString, QPair<double, double> > paramRange;
+    int secondErrorElevListKeysNum, secondErrorAzimuthListKeysNum;
 };
 
 #endif // ALLSTEPS_H
