@@ -13,10 +13,10 @@ void AllSteps::slotAllStepsStart()
     QString hyp, hypname, picname, ampm, bw;
     int picno;
 
-    int p1_resolution = 40;             // in pixels
-    double p2_resolution = 30;          // in deg
-    double deltoid_resolution = 9.0;    // (deltoid_points+1)**2 points
-    double elev_resolution = 0.5;       // in deg
+    int p1_resolution = 40;             // in pixels (20)
+    double p2_resolution = 30;          // in deg (15)
+    double deltoid_resolution = 9.0;    // (deltoid_points+1)**2 points (19)
+    double elev_resolution = 0.5;       // in deg (0.2)
 
     QDir folder = QFileDialog::getExistingDirectory();
     QStringList nameList = folder.entryList(QStringList(), QDir::Files | QDir::NoDotAndDotDot);
