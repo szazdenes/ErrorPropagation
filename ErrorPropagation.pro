@@ -22,14 +22,16 @@ SOURCES += main.cpp\
     firststep.cpp \
     thirdstep.cpp \
     geomtransform.cpp \
-    allsteps.cpp
+    allsteps.cpp \
+    enhancedallsteps.cpp
 
 HEADERS  += errorprop.h \
     propagationform.h \
     firststep.h \
     thirdstep.h \
     geomtransform.h \
-    allsteps.h
+    allsteps.h \
+    enhancedallsteps.h
 
 FORMS    += errorprop.ui \
     propagationform.ui

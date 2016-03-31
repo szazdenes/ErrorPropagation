@@ -51,3 +51,11 @@ void PropagationForm::on_allStepsPushButton_clicked()
 
     emit signalAllStepsStart();
 }
+
+void PropagationForm::on_pushButton_clicked()
+{
+    ui->listWidget->clear();
+    EnhancedAllsteps enhall;
+    connect(this, &PropagationForm::signalEnhancedAllStepsStart, &enhall, &EnhancedAllsteps::slotEnhAllStepsStart);
+    connect(&enhall, &EnhancedAllsteps::signalWriteToList, this, &PropagationForm::slotWriteToList);
+}

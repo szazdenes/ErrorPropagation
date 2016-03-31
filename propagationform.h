@@ -6,6 +6,7 @@
 #include "firststep.h"
 #include "thirdstep.h"
 #include "allsteps.h"
+#include "enhancedallsteps.h"
 
 namespace Ui {
 class PropagationForm;
@@ -23,6 +24,7 @@ signals:
     void signalFirstStepStart();
     void signalThirdStepStart();
     void signalAllStepsStart();
+    void signalEnhancedAllStepsStart();
 
 public slots:
     void slotWriteToList(QString string);
@@ -33,6 +35,8 @@ private slots:
     void on_thirdStepPushButton_clicked();
 
     void on_allStepsPushButton_clicked();
+
+    void on_pushButton_clicked();
 
 private:
     Ui::PropagationForm *ui;
