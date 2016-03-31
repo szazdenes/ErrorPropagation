@@ -58,4 +58,6 @@ void PropagationForm::on_pushButton_clicked()
     EnhancedAllsteps enhall;
     connect(this, &PropagationForm::signalEnhancedAllStepsStart, &enhall, &EnhancedAllsteps::slotEnhAllStepsStart);
     connect(&enhall, &EnhancedAllsteps::signalWriteToList, this, &PropagationForm::slotWriteToList);
+
+    emit signalEnhancedAllStepsStart();
 }

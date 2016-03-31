@@ -604,7 +604,7 @@ QPair<double, double> AllSteps::getSeconStepElevError(double delta, double elev,
 {
     QPair<double, double> elevResult(-999, -999);
     for(int j = 0; j < secondErrorElevListKeysNum; j++){
-        QString currentkey = secondErrorAzimuthList.keys().at(j);
+        QString currentkey = secondErrorElevList.keys().at(j);
         if(delta >= paramRange["delta_" + QString::number(j)].first && delta <= paramRange["delta_" + QString::number(j)].second && elev >= paramRange["elev_" + QString::number(j)].first && elev <= paramRange["elev_" + QString::number(j)].second && th1 >= paramRange["th1_" + QString::number(j)].first && th1 <= paramRange["th1_" + QString::number(j)].second && th2 >= paramRange["th2_" + QString::number(j)].first && th2 <= paramRange["th2_" + QString::number(j)].second){
             elevResult.first = secondErrorElevList[currentkey].first;
             elevResult.second = secondErrorElevList[currentkey].second;
