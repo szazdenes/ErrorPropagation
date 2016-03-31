@@ -473,7 +473,6 @@ QList<QPair<QPair<QVector3D, QVector3D>, QVector3D> > EnhancedAllsteps::getInter
                     current_v_pol.second = transform.descartes2Polar(v);
                     v_pol.append(current_v_pol);
                 }
-                QApplication::processEvents();
             }
         }
 
@@ -519,7 +518,6 @@ QList<QVector3D> EnhancedAllsteps::getPointsFromSecondStep_pol(QList<QPair<QPair
                         firstSecond_sun.setY(new_v_pol.y() + (el * Pi/180.0));
                         firstSecond_sun.setZ(new_v_pol.z() + (az * Pi/180.0));
                         secondStepPoints.append(firstSecond_sun);
-                        QApplication::processEvents();
                     }
                 }
             }
@@ -538,6 +536,7 @@ QList<QVector3D> EnhancedAllsteps::getPointsFromThirdStep_pol(QList<QVector3D> s
 {
     QList<QVector3D> thirdStepPoints;
     if(!secondErrorPoint_pol.isEmpty()){
+        double count=0;
         foreach(QVector3D currentpoint, secondErrorPoint_pol){
             double thirdError;
             double firstSecond_elev_deg = (Pi/2.0 - currentpoint.y()) * 180.0/Pi;
@@ -556,8 +555,10 @@ QList<QVector3D> EnhancedAllsteps::getPointsFromThirdStep_pol(QList<QVector3D> s
                     sunWithErrors.setY(currentpoint.y() + elev*Pi/180.0);
                     thirdStepPoints.append(sunWithErrors);
                 }
-                QApplication::processEvents();
             }
+            count++;
+            QApplication::processEvents();
+            emit signalWriteToList("Third step " + QString::number(100*count/(double)secondErrorPoint_pol.size()) + " % ready.");
         }
     }
     else{
