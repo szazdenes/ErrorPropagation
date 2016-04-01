@@ -585,7 +585,7 @@ QPair<QVector<QVector2D>, QVector<QVector2D> > EnhancedAllsteps::getSunShadows(Q
         QVector2D projected, paint;
         foreach(QVector3D currentpoint, *thirdErrorPoints_pol){
             projected = QVector2D( tan(currentpoint.y())*cos(-currentpoint.z()) , tan(currentpoint.y())*sin(-currentpoint.z()) );
-            if(currentpoint.y()<Pi/2.0-Pi/16  && projected.length()>r_min){ // horizonthoz ne legyen tul kozel (nagyon hosszu arnyek)
+            if(currentpoint.y()<Pi/2.0-Pi/16.0  && projected.length()>r_min){ // horizonthoz ne legyen tul kozel (nagyon hosszu arnyek)
                 sunShadows.first.append(projected);
                 paint = sunShadows.first.last();
                 paint = transform.rotate2D(paint, north);

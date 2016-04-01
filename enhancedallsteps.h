@@ -1,6 +1,8 @@
 #ifndef ENHANCEDALLSTEPS_H
 #define ENHANCEDALLSTEPS_H
 
+//#define Pi 3.1415926536
+
 #include <QObject>
 #include <QWidget>
 

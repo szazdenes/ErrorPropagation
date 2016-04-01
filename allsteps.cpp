@@ -13,8 +13,8 @@ void AllSteps::slotAllStepsStart()
     QString hyp, hypname, picname, ampm, bw;
     int picno;
 
-    int p1_resolution = 40;             // in pixels (20)
-    double p2_resolution = 30;          // in deg (15)
+    int p1_resolution = 100;             // in pixels (20)
+    double p2_resolution = 50;          // in deg (15)
     double deltoid_resolution = 9.0;    // (deltoid_points+1)**2 points (19)
     double elev_resolution = 0.5;       // in deg (0.2)
 
@@ -400,8 +400,8 @@ void AllSteps::calculateSunPositions(QVector3D sun, QVector3D point1, QVector3D 
                     QVector3D firstSecond_sun;
                     firstSecond_sun.setX(new_v_pol.x());
 
-                    for(double el = -secondElevErrors.second; el <= secondElevErrors.second; el+=secondElevErrors.second/5.0){
-                        for(double az = -secondAzimuthErrors.second; az < secondAzimuthErrors.second; az+=secondAzimuthErrors.second/5.0){
+                    for(double el = -secondElevErrors.second; el <= secondElevErrors.second; el+= 1.0){
+                        for(double az = -secondAzimuthErrors.second; az < secondAzimuthErrors.second; az+= 1.0){
                             firstSecond_sun.setY(new_v_pol.y() + (el * Pi/180.0));
                             firstSecond_sun.setZ(new_v_pol.z() + (az * Pi/180.0));
 
