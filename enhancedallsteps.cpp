@@ -112,7 +112,7 @@ void EnhancedAllsteps::slotEnhAllStepsStart()
                                 firstErrors.append(err1);
                                 firstErrors.append(err2);
                                 firstErrors.append(deltoid_resolution);
-//                                currentFirstErrorPoints.clear();
+                                currentFirstErrorPoints.clear();
                                 currentFirstErrorPoints = getIntersectionsFromFirstStep_pol(sAndps, firstErrors, s);
                                 firstErrorPoints_pol->append(currentFirstErrorPoints);
                             }
@@ -129,7 +129,7 @@ void EnhancedAllsteps::slotEnhAllStepsStart()
                 sunShadowPoints = getSunShadows(&thirdErrorPoints_pol, R_MIN, North);
                 sShadows = sunShadowPoints.first;
                 toPaint = sunShadowPoints.second;
-                hist = calculateNorthErrors(sShadows, hypPoints, North);
+                hist = calculateNorthErrors(&sShadows, hypPoints, North);
                 emit signalWriteToList("North error calculation ready");
                 paint(hypPoints, toPaint, R_MIN);
 
@@ -384,7 +384,7 @@ QVector3D EnhancedAllsteps::intersectionOfGreatCircles(QVector3D GC1A, QVector3D
     return result;
 }
 
-QVector<int> EnhancedAllsteps::calculateNorthErrors(QVector<QVector2D> sun_shadows, QVector<QVector2D> hyp_points, double north)
+QVector<int> EnhancedAllsteps::calculateNorthErrors(QVector<QVector2D> *sun_shadows, QVector<QVector2D> hyp_points, double north)
 {
     QVector<int> histogram(361);
     QVector<double> nerrors;
@@ -393,19 +393,19 @@ QVector<int> EnhancedAllsteps::calculateNorthErrors(QVector<QVector2D> sun_shado
     QVector2D INTERSECT;
     int h;
 
-    int sShadowsSize = sun_shadows.size();
+    int sShadowsSize = sun_shadows->size();
     int hyp_pointsSize = hyp_points.size();
 
     for(int i=0; i<sShadowsSize; i++){
         minimums.clear();
         nerrors.clear();
 
-        sun_shadows.replace(i, transform.rotate2D(sun_shadows.at(i), north));
+        sun_shadows->replace(i, transform.rotate2D(sun_shadows->at(i), north));
 
         for (int j=1; j<hyp_pointsSize-1; j++){
-            if( (fabs(sun_shadows.at(i).length()-hyp_points.at(j).length())<fabs(sun_shadows.at(i).length()-hyp_points.at(j-1).length()))&&(fabs(sun_shadows.at(i).length()-hyp_points.at(j).length())<fabs(sun_shadows.at(i).length()-hyp_points.at(j+1).length()))){
+            if( (fabs(sun_shadows->at(i).length()-hyp_points.at(j).length())<fabs(sun_shadows->at(i).length()-hyp_points.at(j-1).length()))&&(fabs(sun_shadows->at(i).length()-hyp_points.at(j).length())<fabs(sun_shadows->at(i).length()-hyp_points.at(j+1).length()))){
                 minimums.append(hyp_points.at(j));
-                nerrors.append(acos(QVector2D::dotProduct(hyp_points.at(j).normalized(), sun_shadows.at(i).normalized())));
+                nerrors.append(acos(QVector2D::dotProduct(hyp_points.at(j).normalized(), sun_shadows->at(i).normalized())));
             }
         }
 
@@ -420,7 +420,7 @@ QVector<int> EnhancedAllsteps::calculateNorthErrors(QVector<QVector2D> sun_shado
                     NERROR = nerrors.at(j);
                 }
 
-            if (QVector3D::crossProduct(sun_shadows.at(i).toVector3D(), INTERSECT.toVector3D()).z() < 0)
+            if (QVector3D::crossProduct(sun_shadows->at(i).toVector3D(), INTERSECT.toVector3D()).z() < 0)
                 NERROR *= (-1.0);
 
             NERROR = NERROR/Pi*180.0;
