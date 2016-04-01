@@ -124,15 +124,22 @@ void EnhancedAllsteps::slotEnhAllStepsStart()
                 emit signalWriteToList("100 % of first error calculation ready");
                 secondErrorPoints_pol = getPointsFromSecondStep_pol(firstErrorPoints_pol, second_resolution);
                 emit signalWriteToList("Second error calculation ready.");
+                firstErrorPoints_pol->clear();
                 thirdErrorPoints_pol = getPointsFromThirdStep_pol(&secondErrorPoints_pol, elev_resolution);
-                emit signalWriteToList("Third error calculation ready");
+                emit signalWriteToList("Third error calculation ready.");
+                secondErrorPoints_pol.clear();
                 sunShadowPoints = getSunShadows(&thirdErrorPoints_pol, R_MIN, North);
                 sShadows = sunShadowPoints.first;
                 toPaint = sunShadowPoints.second;
+                emit signalWriteToList("Sun shadow calculation ready.");
+                thirdErrorPoints_pol.clear();
+                sunShadowPoints.first.clear();
+                sunShadowPoints.second.clear();
                 hist = calculateNorthErrors(&sShadows, hypPoints, North);
                 emit signalWriteToList("North error calculation ready");
+                sShadows.clear();
                 paint(hypPoints, toPaint, R_MIN);
-
+                toPaint.clear();
                 writeDatFile(imagename, hypname, ampm, stone, p1_resolution, p2_resolution, deltoid_resolution, second_resolution, elev_resolution, hist, North);
 
                 QApplication::processEvents();
@@ -430,6 +437,9 @@ QVector<int> EnhancedAllsteps::calculateNorthErrors(QVector<QVector2D> *sun_shad
                 histogram[360]++;
             }
         }
+        QApplication::processEvents();
+        if(i % 1000000 == 0)
+            emit signalWriteToList("North error calculation " + QString::number(100*(double)i/(double)sShadowsSize) + " % ready.");
     }
     return histogram;
 }
@@ -517,7 +527,7 @@ QVector<QVector3D> EnhancedAllsteps::getPointsFromSecondStep_pol(QVector<QPair<Q
                 }
             }
             QApplication::processEvents();
-            if(i % 10000 == 0)
+            if(i % 100000 == 0)
                 emit signalWriteToList("Second step " + QString::number(100*(double)i/(double)num) + " % ready.");
         }
     }
@@ -555,7 +565,7 @@ QVector<QVector3D> EnhancedAllsteps::getPointsFromThirdStep_pol(QVector<QVector3
             }
             count++;
             QApplication::processEvents();
-            if((int)count % 10000 == 0)
+            if((int)count % 100000 == 0)
                 emit signalWriteToList("Third step " + QString::number(100*count/(double)secondErrorPoint_pol->size()) + " % ready.");
         }
     }
@@ -583,7 +593,8 @@ QPair<QVector<QVector2D>, QVector<QVector2D> > EnhancedAllsteps::getSunShadows(Q
             }
             count++;
             QApplication::processEvents();
-            emit signalWriteToList("Sunshadow " + QString::number(100*count/(double)thirdErrorPoints_pol->size()) + " % ready.");
+            if((int)count % 100000 == 0)
+                emit signalWriteToList("Sunshadow " + QString::number(100*count/(double)thirdErrorPoints_pol->size()) + " % ready.");
         }
     }
     else{
