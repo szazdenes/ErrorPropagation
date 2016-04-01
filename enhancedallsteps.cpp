@@ -24,10 +24,10 @@ void EnhancedAllsteps::slotEnhAllStepsStart()
     QString hyp, hypname, picname, ampm;
     int picno;
 
-    int p1_resolution = 20;             // in pixels (20)
-    double p2_resolution = 15;          // in deg (15)
-    double deltoid_resolution = 19.0;    // (deltoid_points+1)**2 points (19)
-    double elev_resolution = 0.2;       // in deg (0.2)
+    int p1_resolution = 100;             // in pixels (20)
+    double p2_resolution = 50;          // in deg (15)
+    double deltoid_resolution = 9.0;    // (deltoid_points+1)**2 points (19)
+    double elev_resolution = 0.5;       // in deg (0.2)
     double second_resolution = 1.0;    // in deg (0.25)
 
     QDir folder = QFileDialog::getExistingDirectory();
