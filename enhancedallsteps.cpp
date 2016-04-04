@@ -2,7 +2,16 @@
 
 EnhancedAllsteps::EnhancedAllsteps(QObject *parent) : QObject(parent)
 {
+    secondErrorElevList = new QMap<QString, QPair<double, double> >();
+    secondErrorAzimuthList = new QMap<QString, QPair<double, double> >();
+    paramRange = new QMap<QString, QPair<double, double> >();
+}
 
+EnhancedAllsteps::~EnhancedAllsteps()
+{
+    delete secondErrorElevList;
+    delete secondErrorAzimuthList;
+    delete paramRange;
 }
 
 void EnhancedAllsteps::slotEnhAllStepsStart()
@@ -24,10 +33,10 @@ void EnhancedAllsteps::slotEnhAllStepsStart()
     QString hyp, hypname, picname, ampm;
     int picno;
 
-    int p1_resolution = 100;             // in pixels (20)
-    double p2_resolution = 50;          // in deg (15)
-    double deltoid_resolution = 9.0;    // (deltoid_points+1)**2 points (19)
-    double elev_resolution = 0.5;       // in deg (0.2)
+    int p1_resolution = 20;             // in pixels (20)
+    double p2_resolution = 15;          // in deg (15)
+    double deltoid_resolution = 19.0;    // (deltoid_points+1)**2 points (19)
+    double elev_resolution = 0.2;       // in deg (0.2)
     double second_resolution = 1.0;    // in deg (0.25)
 
     QDir folder = QFileDialog::getExistingDirectory();
@@ -517,7 +526,7 @@ QVector<QVector3D> EnhancedAllsteps::getPointsFromSecondStep_pol(QVector<QPair<Q
                 QVector3D new_v_pol(currentPoint.second.x(), currentPoint.second.y() - (secondElevErrors.first * Pi/180.0), currentPoint.second.z() + (secondAzimuthErrors.first * Pi/180.0)); /*theta measured from vertical*/
                 QVector3D firstSecond_sun;
                 firstSecond_sun.setX(new_v_pol.x());
-
+/*
                 for(double el = -secondElevErrors.second; el <= secondElevErrors.second; el += seconderror_resolution){
                     for(double az = -secondAzimuthErrors.second; az < secondAzimuthErrors.second; az += seconderror_resolution){
                         firstSecond_sun.setY(new_v_pol.y() + (el * Pi/180.0));
@@ -525,6 +534,10 @@ QVector<QVector3D> EnhancedAllsteps::getPointsFromSecondStep_pol(QVector<QPair<Q
                         secondStepPoints.append(firstSecond_sun);
                     }
                 }
+                */
+                firstSecond_sun.setY(new_v_pol.y());
+                firstSecond_sun.setZ(new_v_pol.z());
+                secondStepPoints.append(firstSecond_sun);
             }
             QApplication::processEvents();
             if(i % 100000 == 0)
@@ -608,9 +621,9 @@ QPair<QVector<QVector2D>, QVector<QVector2D> > EnhancedAllsteps::getSunShadows(Q
 
 void EnhancedAllsteps::loadSecondErrorData()
 {
-    secondErrorElevList.clear();
-    secondErrorAzimuthList.clear();
-    paramRange.clear();
+    secondErrorElevList->clear();
+    secondErrorAzimuthList->clear();
+    paramRange->clear();
 
     QFile file("../result_ranges.csv");
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
@@ -621,16 +634,14 @@ void EnhancedAllsteps::loadSecondErrorData()
         QString line = stream.readLine();
         if(!line.startsWith("#")){
             QStringList lineList = line.split("\t");
-            str = lineList.takeFirst();
-            secondErrorElevList[str].first = QString(lineList.takeFirst()).toDouble();
-            secondErrorElevList[str].second = QString(lineList.takeFirst()).toDouble();
-            secondErrorAzimuthList[str].first = QString(lineList.takeFirst()).toDouble();
-            secondErrorAzimuthList[str].second = QString(lineList.takeFirst()).toDouble();
+            str = lineList.at(0);
+            secondErrorElevList->insert(str, QPair<double, double> (QString(lineList.at(1)).toDouble(), QString(lineList.at(2)).toDouble()));
+            secondErrorAzimuthList->insert(str, QPair<double, double> (QString(lineList.at(3)).toDouble(), QString(lineList.at(4)).toDouble()));
         }
     }
 
-    for(int j = 0; j < secondErrorAzimuthList.keys().size(); j++){
-        QString currentkey = secondErrorAzimuthList.keys().at(j);
+    for(int j = 0; j < secondErrorAzimuthList->keys().size(); j++){
+        QString currentkey = secondErrorAzimuthList->keys().at(j);
         QStringList keyparts = currentkey.split(" ");
 
         for(int i = 0; i < keyparts.size(); i++) {
@@ -638,40 +649,36 @@ void EnhancedAllsteps::loadSecondErrorData()
             double min = QString(currentPart.takeFirst()).toDouble();
             double max = QString(currentPart.takeFirst()).toDouble();
             if(i == 0){
-                paramRange["delta_" + QString::number(j)].first = min;
-                paramRange["delta_" + QString::number(j)].second = max;
+                paramRange->insert("delta_" + QString::number(j), QPair<double, double> (min, max));
             }
             if(i == 1){
-                paramRange["elev_" + QString::number(j)].first = min;
-                paramRange["elev_" + QString::number(j)].second = max;
+                paramRange->insert("elev_" + QString::number(j), QPair<double, double> (min, max));
             }
             if(i == 2){
-                paramRange["th1_" + QString::number(j)].first = min;
-                paramRange["th1_" + QString::number(j)].second = max;
+                paramRange->insert("th1_" + QString::number(j), QPair<double, double> (min, max));
             }
             if(i == 3){
-                paramRange["th2_" + QString::number(j)].first = min;
-                paramRange["th2_" + QString::number(j)].second = max;
+                paramRange->insert("th2_" + QString::number(j), QPair<double, double> (min, max));
             }
         }
     }
 
-    secondErrorElevListKeysNum = secondErrorElevList.keys().size();
-    secondErrorAzimuthListKeysNum = secondErrorAzimuthList.keys().size();
+    secondErrorElevListKeysNum = secondErrorElevList->keys().size();
+    secondErrorAzimuthListKeysNum = secondErrorAzimuthList->keys().size();
 
     QApplication::processEvents();
     emit signalWriteToList("Second error data loaded.");
 }
 
-QPair<double, double> EnhancedAllsteps::getSeconStepError(QList<double> params, QMap<QString, QPair<double, double> > secondErrorMap, QMap<QString, QPair<double, double> > rangeMap, double keysNum)
+QPair<double, double> EnhancedAllsteps::getSeconStepError(QList<double> params, QMap<QString, QPair<double, double> > *secondErrorMap, QMap<QString, QPair<double, double> > *rangeMap, double keysNum)
 {
     QPair<double, double> seconderror(-999, -999); /*to be easy to recognise*/
     if(!params.isEmpty() && params.size() == 4){
         for(int j = 0; j < keysNum; j++){
-            QString currentkey = secondErrorMap.keys().at(j);
-            if(params.at(0) >= rangeMap["delta_" + QString::number(j)].first && params.at(0) <= rangeMap["delta_" + QString::number(j)].second && params.at(1) >= rangeMap["elev_" + QString::number(j)].first && params.at(1) <= rangeMap["elev_" + QString::number(j)].second && params.at(2) >= rangeMap["th1_" + QString::number(j)].first && params.at(2) <= rangeMap["th1_" + QString::number(j)].second && params.at(3) >= rangeMap["th2_" + QString::number(j)].first && params.at(3) <= rangeMap["th2_" + QString::number(j)].second){
-                seconderror.first = secondErrorMap[currentkey].first;
-                seconderror.second = secondErrorMap[currentkey].second;
+            QString currentkey = secondErrorMap->keys().at(j);
+            if(params.at(0) >= rangeMap->value("delta_" + QString::number(j)).first && params.at(0) <= rangeMap->value("delta_" + QString::number(j)).second && params.at(1) >= rangeMap->value("elev_" + QString::number(j)).first && params.at(1) <= rangeMap->value("elev_" + QString::number(j)).second && params.at(2) >= rangeMap->value("th1_" + QString::number(j)).first && params.at(2) <= rangeMap->value("th1_" + QString::number(j)).second && params.at(3) >= rangeMap->value("th2_" + QString::number(j)).first && params.at(3) <= rangeMap->value("th2_" + QString::number(j)).second){
+                seconderror.first = secondErrorMap->value(currentkey).first;
+                seconderror.second = secondErrorMap->value(currentkey).second;
             }
         }
     }
