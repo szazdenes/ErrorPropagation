@@ -16,7 +16,8 @@ EnhancedAllsteps::~EnhancedAllsteps()
 
 void EnhancedAllsteps::slotEnhAllStepsStart()
 {
-    emit signalWriteToList(QTime::currentTime().toString());
+    QString startTime, endTime;
+    startTime = QTime::currentTime().toString();
     loadSecondErrorData();
 
     QVector<QVector2D> hypPoints, sShadows, toPaint;
@@ -35,7 +36,7 @@ void EnhancedAllsteps::slotEnhAllStepsStart()
 
     int p1_resolution = 20;             // in pixels (20)
     double p2_resolution = 15;          // in deg (15)
-    double deltoid_resolution = 19.0;    // (deltoid_points+1)**2 points (19)
+    double deltoid_resolution = 9.0;    // (deltoid_points+1)**2 points (19)
     double elev_resolution = 0.2;       // in deg (0.2)
     double second_resolution = 1.0;    // in deg (0.25)
 
@@ -80,8 +81,7 @@ void EnhancedAllsteps::slotEnhAllStepsStart()
                     ampm="pm";
                 }
 
-                QVector<QPair<QPair<QVector3D, QVector3D>, QVector3D> > currentFirstErrorPoints, *firstErrorPoints_pol;
-                firstErrorPoints_pol = new QVector<QPair<QPair<QVector3D, QVector3D>, QVector3D> >();
+                QVector<QPair<QPair<QVector3D, QVector3D>, QVector3D> > currentFirstErrorPoints, firstErrorPoints_pol;
                 QVector<QVector3D> secondErrorPoints_pol, thirdErrorPoints_pol;
                 QPair<QVector<QVector2D>, QVector<QVector2D> > sunShadowPoints;
                 QVector<int> hist(361);
@@ -123,7 +123,7 @@ void EnhancedAllsteps::slotEnhAllStepsStart()
                                 firstErrors.append(deltoid_resolution);
                                 currentFirstErrorPoints.clear();
                                 currentFirstErrorPoints = getIntersectionsFromFirstStep_pol(sAndps, firstErrors, s);
-                                firstErrorPoints_pol->append(currentFirstErrorPoints);
+                                firstErrorPoints_pol.append(currentFirstErrorPoints);
                             }
                         }
                     }
@@ -131,9 +131,9 @@ void EnhancedAllsteps::slotEnhAllStepsStart()
                     emit signalWriteToList(QString::number((int)((double)i/image.width()*100.0)) + " % of first error calculation ready");
                 }
                 emit signalWriteToList("First error calculation ready");
-                secondErrorPoints_pol = getPointsFromSecondStep_pol(firstErrorPoints_pol, second_resolution);
+                secondErrorPoints_pol = getPointsFromSecondStep_pol(&firstErrorPoints_pol, second_resolution);
                 emit signalWriteToList("Second error calculation ready.");
-                firstErrorPoints_pol->clear();
+                firstErrorPoints_pol.clear();
                 thirdErrorPoints_pol = getPointsFromThirdStep_pol(&secondErrorPoints_pol, elev_resolution);
                 emit signalWriteToList("Third error calculation ready.");
                 secondErrorPoints_pol.clear();
@@ -153,21 +153,19 @@ void EnhancedAllsteps::slotEnhAllStepsStart()
 
                 QApplication::processEvents();
                 emit signalWriteToList(QTime::currentTime().toString());
-
-                delete firstErrorPoints_pol;
-
-
             }
         }
 
     }
 
-
+    endTime = QTime::currentTime().toString();
+    emit signalWriteToList("Start time: " + startTime);
+    emit signalWriteToList("End time: " + endTime);
 
 
 }
 
-void EnhancedAllsteps::paint(QVector<QVector2D> hyp_points, QVector<QVector2D> to_paint, double r_min)
+void EnhancedAllsteps::paint(QVector<QVector2D> &hyp_points, QVector<QVector2D> &to_paint, double r_min)
 {
     int size = 1355;
     QPainter painter;
@@ -205,7 +203,7 @@ QImage EnhancedAllsteps::readImage(QString filename)
     return im;
 }
 
-double EnhancedAllsteps::getMinRadius(QVector<QVector2D> hyperbola)
+double EnhancedAllsteps::getMinRadius(QVector<QVector2D> &hyperbola)
 {
     double r_min = 100000.0;
     int hyperbolaSize = hyperbola.size();
@@ -269,7 +267,7 @@ double EnhancedAllsteps::getError(double deg_of_pol, int stein)
     }
 }
 
-void EnhancedAllsteps::writeDatFile(QString imname, QString hyperbola, QString timeOfDay, int stein, int p1_res, double p2_res, double deltoid_res, double second_error_res, double elev_res, QVector<int> histogram, double north)
+void EnhancedAllsteps::writeDatFile(QString imname, QString hyperbola, QString timeOfDay, int stein, int p1_res, double p2_res, double deltoid_res, double second_error_res, double elev_res, QVector<int> &histogram, double north)
 {
     QString s;
     if(stein == 1)
@@ -298,7 +296,7 @@ void EnhancedAllsteps::writeDatFile(QString imname, QString hyperbola, QString t
     emit signalWriteToList(filename + QString(" ready"));
 }
 
-QVector3D EnhancedAllsteps::detectSun(QImage im)
+QVector3D EnhancedAllsteps::detectSun(QImage &im)
 {
     QVector3D sun;
     int imageWidth = im.width();
@@ -317,7 +315,7 @@ QVector3D EnhancedAllsteps::detectSun(QImage im)
     return sun;
 }
 
-double EnhancedAllsteps::detectNorth(QVector<QVector2D> hyp_points, QVector3D sun)
+double EnhancedAllsteps::detectNorth(QVector<QVector2D> &hyp_points, QVector3D &sun)
 {
     double north;
     QVector<double> nerrors;
@@ -357,7 +355,7 @@ double EnhancedAllsteps::detectNorth(QVector<QVector2D> hyp_points, QVector3D su
     return north;
 }
 
-QPair<QList<QVector3D>, QList<double> > EnhancedAllsteps::calculatep2s(QImage im, QVector3D sun, QVector3D p1, double min, double max, double res)
+QPair<QList<QVector3D>, QList<double> > EnhancedAllsteps::calculatep2s(QImage &im, QVector3D &sun, QVector3D &p1, double min, double max, double res)
 {
     QPair<QList<QVector3D>, QList<double> > p2s_data;
     QVector3D axis,v;
@@ -382,7 +380,7 @@ QPair<QList<QVector3D>, QList<double> > EnhancedAllsteps::calculatep2s(QImage im
     return p2s_data;
 }
 
-QVector3D EnhancedAllsteps::intersectionOfGreatCircles(QVector3D GC1A, QVector3D GC1B, QVector3D GC2A, QVector3D GC2B, QVector3D sun)
+QVector3D EnhancedAllsteps::intersectionOfGreatCircles(QVector3D &GC1A, QVector3D &GC1B, QVector3D &GC2A, QVector3D &GC2B, QVector3D &sun)
 {
     QVector3D D,result;
     QVector3D axis1 = QVector3D::crossProduct(GC1A, GC1B).normalized();
@@ -401,7 +399,7 @@ QVector3D EnhancedAllsteps::intersectionOfGreatCircles(QVector3D GC1A, QVector3D
     return result;
 }
 
-QVector<int> EnhancedAllsteps::calculateNorthErrors(QVector<QVector2D> *sun_shadows, QVector<QVector2D> hyp_points, double north)
+QVector<int> EnhancedAllsteps::calculateNorthErrors(QVector<QVector2D> *sun_shadows, QVector<QVector2D> &hyp_points, double north)
 {
     QVector<int> histogram(361);
     QVector<double> nerrors;
@@ -449,13 +447,13 @@ QVector<int> EnhancedAllsteps::calculateNorthErrors(QVector<QVector2D> *sun_shad
             }
         }
         QApplication::processEvents();
-        if(i % 1000000 == 0)
+        if(i % 100000 == 0)
             emit signalWriteToList("North error calculation " + QString::number(100*(double)i/(double)sShadowsSize) + " % ready.");
     }
     return histogram;
 }
 
-QVector<QPair<QPair<QVector3D, QVector3D>, QVector3D> > EnhancedAllsteps::getIntersectionsFromFirstStep_pol(QList<QVector3D> sunAndPoints, QList<double> firstStepErrors, QVector3D sun)
+QVector<QPair<QPair<QVector3D, QVector3D>, QVector3D> > EnhancedAllsteps::getIntersectionsFromFirstStep_pol(QList<QVector3D> &sunAndPoints, QList<double> &firstStepErrors, QVector3D &sun)
 {
     QVector<QPair<QPair<QVector3D, QVector3D>, QVector3D> > v_pol; //first: point1, point2 second: v_pol
     QPair<QPair<QVector3D, QVector3D>, QVector3D> current_v_pol;
@@ -463,6 +461,7 @@ QVector<QPair<QPair<QVector3D, QVector3D>, QVector3D> > EnhancedAllsteps::getInt
     current_v_pol.first.second = sunAndPoints.at(2);
     if(sunAndPoints.size() == 3 && firstStepErrors.size() == 3){
         QVector3D GC1_point, GC2_point, v;
+        QVector3D p1, p2;
         QVector3D p1Plus, p1Minus, n_p1Plus, n_p1Minus;
         QVector3D p2Plus, p2Minus, n_p2Plus, n_p2Minus;
 
@@ -482,8 +481,9 @@ QVector<QPair<QPair<QVector3D, QVector3D>, QVector3D> > EnhancedAllsteps::getInt
             for (double j=0.0; j<=firstStepErrors.at(2); j+=1){
 
                 GC2_point = transform.rotate (sunAndPoints.at(2), transform.rotate(QVector3D::crossProduct(sunAndPoints.at(2), sunAndPoints.at(0)).normalized(), sunAndPoints.at(2), (-firstStepErrors.at(1)+2.0*j*firstStepErrors.at(1)/firstStepErrors.at(2))*Pi/180.0), Pi/10.0 );
-
-                v = intersectionOfGreatCircles(sunAndPoints.at(1), GC1_point, sunAndPoints.at(2), GC2_point, sun);
+                p1 = sunAndPoints.at(1);
+                p2 = sunAndPoints.at(2);
+                v = intersectionOfGreatCircles(p1, GC1_point, p2, GC2_point, sun);
                 if(QVector3D::dotProduct(n_p1Plus,sunAndPoints.at(0))*QVector3D::dotProduct(n_p1Plus,v) > 0 && QVector3D::dotProduct(n_p1Minus,sunAndPoints.at(0))*QVector3D::dotProduct(n_p1Minus,v) > 0 && QVector3D::dotProduct(n_p2Plus,sunAndPoints.at(0))*QVector3D::dotProduct(n_p2Plus,v) > 0 && QVector3D::dotProduct(n_p2Minus,sunAndPoints.at(0))*QVector3D::dotProduct(n_p2Minus,v) > 0){
                     current_v_pol.second = transform.descartes2Polar(v);
                     v_pol.append(current_v_pol);
@@ -549,7 +549,7 @@ QVector<QVector3D> EnhancedAllsteps::getPointsFromSecondStep_pol(QVector<QPair<Q
                 secondStepPoints.append(firstSecond_sun);
             }
             QApplication::processEvents();
-            if(i % 1000 == 0)
+            if(i % 100000 == 0)
                 emit signalWriteToList("Second step " + QString::number(100*(double)i/(double)num) + " % ready.");
         }
     }
@@ -675,7 +675,6 @@ void EnhancedAllsteps::loadSecondErrorData()
     secondErrorElevListKeysNum = secondErrorElevList->keys().size();
     secondErrorAzimuthListKeysNum = secondErrorAzimuthList->keys().size();
 
-    QApplication::processEvents();
     emit signalWriteToList("Second error data loaded.");
 }
 

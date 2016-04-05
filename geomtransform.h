@@ -7,7 +7,7 @@
 #include <QWidget>
 #include <QVector2D>
 #include <QVector3D>
-#include <math.h>
+#include <QtMath>
 
 class GeomTransform : public QObject
 {
