@@ -13,10 +13,10 @@ void AllSteps::slotAllStepsStart()
     QString hyp, hypname, picname, ampm, bw;
     int picno;
 
-    int p1_resolution = 100;             // in pixels (20)
-    double p2_resolution = 50;          // in deg (15)
-    double deltoid_resolution = 9.0;    // (deltoid_points+1)**2 points (19)
-    double elev_resolution = 0.5;       // in deg (0.2)
+    int p1_resolution = 20;             // in pixels (20)
+    double p2_resolution = 15;          // in deg (15)
+    double deltoid_resolution = 19.0;    // (deltoid_points+1)**2 points (19)
+    double elev_resolution = 0.2;       // in deg (0.2)
 
     QDir folder = QFileDialog::getExistingDirectory();
     QStringList nameList = folder.entryList(QStringList(), QDir::Files | QDir::NoDotAndDotDot);
@@ -402,50 +402,50 @@ void AllSteps::calculateSunPositions(QVector3D sun, QVector3D point1, QVector3D 
                     QVector3D firstSecond_sun;
                     firstSecond_sun.setX(new_v_pol.x());
 
-                    for(double el = -secondElevErrors.second; el <= secondElevErrors.second; el+= 1.0){
-                        for(double az = -secondAzimuthErrors.second; az < secondAzimuthErrors.second; az+= 1.0){
-                            firstSecond_sun.setY(new_v_pol.y() + (el * Pi/180.0));
-                            firstSecond_sun.setZ(new_v_pol.z() + (az * Pi/180.0));
+                    //                    for(double el = -secondElevErrors.second; el <= secondElevErrors.second; el+= 1.0){
+                    //                        for(double az = -secondAzimuthErrors.second; az < secondAzimuthErrors.second; az+= 1.0){
+                    firstSecond_sun.setY(new_v_pol.y());// + (el * Pi/180.0));
+                    firstSecond_sun.setZ(new_v_pol.z());// + (az * Pi/180.0));
 
-                            /*third step errors*/
-                            double thirdError = 0;
-                            double firstSecond_elev_deg = (Pi/2.0 - firstSecond_sun.y()) * 180.0/Pi;
-                            if(bw == "best")
-                                thirdError = 0.112482*pow(firstSecond_elev_deg, 0.784039);
-                            if(bw == "second")
-                                thirdError = 1.22733*pow(firstSecond_elev_deg, 0.353381);
-                            if(bw == "worst")
-                                thirdError = 0.0256134*pow(firstSecond_elev_deg, 1.58538);
-                            if(thirdError < 0)
-                                thirdError = 0;
+                    /*third step errors*/
+                    double thirdError = 0;
+                    double firstSecond_elev_deg = (Pi/2.0 - firstSecond_sun.y()) * 180.0/Pi;
+                    if(bw == "best")
+                        thirdError = 0.112482*pow(firstSecond_elev_deg, 0.784039);
+                    if(bw == "second")
+                        thirdError = 1.22733*pow(firstSecond_elev_deg, 0.353381);
+                    if(bw == "worst")
+                        thirdError = 0.0256134*pow(firstSecond_elev_deg, 1.58538);
+                    if(thirdError < 0)
+                        thirdError = 0;
 
-                            QVector3D sunWithErrors;
-                            sunWithErrors.setX(firstSecond_sun.x());
-                            sunWithErrors.setZ(firstSecond_sun.z());
+                    QVector3D sunWithErrors;
+                    sunWithErrors.setX(firstSecond_sun.x());
+                    sunWithErrors.setZ(firstSecond_sun.z());
 
-                            for(double elev = -thirdError; elev <= thirdError; elev += elev_res_deg){
+                    for(double elev = -thirdError; elev <= thirdError; elev += elev_res_deg){
 
-                                sunWithErrors.setY(firstSecond_sun.y() + elev*Pi/180.0);
-                                if((Pi/2.0 - sunWithErrors.y()) < 0) {
-                                    elev = -firstSecond_sun.y()*180.0/Pi;
-                                    sunWithErrors.setY(firstSecond_sun.y() + elev*Pi/180.0);
-                                }
-
-
-                                projected = QVector2D( tan(sunWithErrors.y())*cos(-sunWithErrors.z()) , tan(sunWithErrors.y())*sin(-sunWithErrors.z()) );
-
-                                if(firstSecond_sun.y()<Pi/2.0-Pi/16  && projected.length()>R_MIN){ // horizonthoz ne legyen tul kozel (nagyon hosszu arnyek)
-
-                                    sShadows.append(projected);
-                                    paint = sShadows.last();
-                                    paint = transform.rotate2D(paint, North);
-                                    toPaint.append(paint);
-                                }
-                                QApplication::processEvents();
-                            }
+                        sunWithErrors.setY(firstSecond_sun.y() + elev*Pi/180.0);
+                        if((Pi/2.0 - sunWithErrors.y()) < 0) {
+                            elev = -firstSecond_sun.y()*180.0/Pi;
+                            sunWithErrors.setY(firstSecond_sun.y() + elev*Pi/180.0);
                         }
+
+
+                        projected = QVector2D( tan(sunWithErrors.y())*cos(-sunWithErrors.z()) , tan(sunWithErrors.y())*sin(-sunWithErrors.z()) );
+
+                        if(firstSecond_sun.y()<Pi/2.0-Pi/16  && projected.length()>R_MIN){ // horizonthoz ne legyen tul kozel (nagyon hosszu arnyek)
+
+                            sShadows.append(projected);
+                            paint = sShadows.last();
+                            paint = transform.rotate2D(paint, North);
+                            toPaint.append(paint);
+                        }
+                        QApplication::processEvents();
                     }
                 }
+                //                    }
+                //                }
             }
         }
     }
@@ -597,6 +597,7 @@ QPair<double, double> AllSteps::getSeconStepAzimuthError(double delta, double el
         if(delta >= paramRange["delta_" + QString::number(j)].first && delta <= paramRange["delta_" + QString::number(j)].second && elev >= paramRange["elev_" + QString::number(j)].first && elev <= paramRange["elev_" + QString::number(j)].second && th1 >= paramRange["th1_" + QString::number(j)].first && th1 <= paramRange["th1_" + QString::number(j)].second && th2 >= paramRange["th2_" + QString::number(j)].first && th2 <= paramRange["th2_" + QString::number(j)].second){
             azimuthResult.first = secondErrorAzimuthList[currentkey].first;
             azimuthResult.second = secondErrorAzimuthList[currentkey].second;
+            break;
         }
     }
 
@@ -611,6 +612,7 @@ QPair<double, double> AllSteps::getSeconStepElevError(double delta, double elev,
         if(delta >= paramRange["delta_" + QString::number(j)].first && delta <= paramRange["delta_" + QString::number(j)].second && elev >= paramRange["elev_" + QString::number(j)].first && elev <= paramRange["elev_" + QString::number(j)].second && th1 >= paramRange["th1_" + QString::number(j)].first && th1 <= paramRange["th1_" + QString::number(j)].second && th2 >= paramRange["th2_" + QString::number(j)].first && th2 <= paramRange["th2_" + QString::number(j)].second){
             elevResult.first = secondErrorElevList[currentkey].first;
             elevResult.second = secondErrorElevList[currentkey].second;
+            break;
         }
     }
 
