@@ -101,8 +101,8 @@ void EnhancedAllsteps::slotEnhAllStepsStart()
                     for(int j=0; j<imageHeight; j+=p1_resolution){
 
                         if( QColor(image.pixel(i,j)) != QColor(Qt::red) && QColor(image.pixel(i,j)) != QColor(Qt::green)){
-                            p1 = transform.fisheye2Descartes(transform.draw2Fisheye(QVector2D(i,j),imageWidth));
-
+                            QVector2D current_fisheye = transform.draw2Fisheye(QVector2D(i,j),imageWidth);
+                            p1 = transform.fisheye2Descartes(current_fisheye);
                             deg_p1 = -(100.0/255.0)*qRed(image.pixel(i,j)) + 100;
                             err1 = getError(deg_p1, stone);
                             QPair<QList<QVector3D>, QList<double> > p2sData = calculatep2s(image, s, p1,45*Pi/180.0, 90*Pi/180.0, p2_resolution*Pi/180.0);
@@ -130,7 +130,7 @@ void EnhancedAllsteps::slotEnhAllStepsStart()
                     QApplication::processEvents();
                     emit signalWriteToList(QString::number((int)((double)i/image.width()*100.0)) + " % of first error calculation ready");
                 }
-                emit signalWriteToList("100 % of first error calculation ready");
+                emit signalWriteToList("First error calculation ready");
                 secondErrorPoints_pol = getPointsFromSecondStep_pol(firstErrorPoints_pol, second_resolution);
                 emit signalWriteToList("Second error calculation ready.");
                 firstErrorPoints_pol->clear();
@@ -307,7 +307,8 @@ QVector3D EnhancedAllsteps::detectSun(QImage im)
     for(int i=0; i<imageWidth; i++){
         for (int j=0; j<imageHeight; j++){
             if (QColor(im.pixel(i,j)) == QColor(Qt::green)){
-                sun = transform.fisheye2Descartes(transform.draw2Fisheye(QVector2D(i,j),imageWidth));
+                QVector2D current_fisheye = transform.draw2Fisheye(QVector2D(i,j),imageWidth);
+                sun = transform.fisheye2Descartes(current_fisheye);
                 emit signalWriteToList("sun detected " + QString::number(i) + " " + QString::number(j));
                 emit signalWriteToList(QString::number((Pi/2 - transform.descartes2Polar(sun).y())/Pi*180.0));
             }
@@ -416,7 +417,8 @@ QVector<int> EnhancedAllsteps::calculateNorthErrors(QVector<QVector2D> *sun_shad
         minimums.clear();
         nerrors.clear();
 
-        sun_shadows->replace(i, transform.rotate2D(sun_shadows->at(i), north));
+        QVector2D current_shadow = sun_shadows->at(i);
+        sun_shadows->replace(i, transform.rotate2D(current_shadow, north));
 
         for (int j=1; j<hyp_pointsSize-1; j++){
             if( (fabs(sun_shadows->at(i).length()-hyp_points.at(j).length())<fabs(sun_shadows->at(i).length()-hyp_points.at(j-1).length()))&&(fabs(sun_shadows->at(i).length()-hyp_points.at(j).length())<fabs(sun_shadows->at(i).length()-hyp_points.at(j+1).length()))){
@@ -670,7 +672,7 @@ void EnhancedAllsteps::loadSecondErrorData()
     emit signalWriteToList("Second error data loaded.");
 }
 
-QPair<double, double> EnhancedAllsteps::getSeconStepError(QList<double> params, QMap<QString, QPair<double, double> > *secondErrorMap, QMap<QString, QPair<double, double> > *rangeMap, double keysNum)
+QPair<double, double> EnhancedAllsteps::getSeconStepError(QList<double> &params, QMap<QString, QPair<double, double> > *secondErrorMap, QMap<QString, QPair<double, double> > *rangeMap, double keysNum)
 {
     QPair<double, double> seconderror(-999, -999); /*to be easy to recognise*/
     if(!params.isEmpty() && params.size() == 4){

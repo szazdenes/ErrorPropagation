@@ -76,7 +76,8 @@ void FirstStep::slotFirstStepStart()
                         for(int j=0; j<imageHeight; j+=p1_resolution){
 
                             if( QColor(image->pixel(i,j)) != QColor(Qt::red) && QColor(image->pixel(i,j)) != QColor(Qt::green)){
-                                p1 = transform.fisheye2Descartes(transform.draw2Fisheye(QVector2D(i,j),imageWidth));
+                                QVector2D currentpoint_fisheye = transform.draw2Fisheye(QVector2D(i,j),imageWidth);
+                                p1 = transform.fisheye2Descartes(currentpoint_fisheye);
 
                                 deg_p1 = -(100.0/255.0)*qRed(image->pixel(i,j)) + 100;
                                 err1 = getError(m, deg_p1, stone);
@@ -252,7 +253,8 @@ void FirstStep::detectSun()
     for(int i=0; i<imageWidth; i++){
         for (int j=0; j<imageHeight; j++){
             if (QColor(image->pixel(i,j)) == QColor(Qt::green)){
-                s = transform.fisheye2Descartes(transform.draw2Fisheye(QVector2D(i,j),imageWidth));
+                QVector2D currentpoint_fisheye = transform.draw2Fisheye(QVector2D(i,j),imageWidth);
+                s = transform.fisheye2Descartes(currentpoint_fisheye);
                 emit signalWriteToList("sun detected " + QString::number(i) + " " + QString::number(j));
                 emit signalWriteToList(QString::number((Pi/2 - transform.descartes2Polar(s).y())/Pi*180.0));
             }
@@ -402,7 +404,8 @@ void FirstStep::calculateNorthErrors()
         minimums.clear();
         nerrors.clear();
 
-        sShadows[i] = transform.rotate2D(sShadows.at(i), North);
+        QVector2D current_shadow = sShadows.at(i);
+        sShadows[i] = transform.rotate2D(current_shadow, North);
 
         for (int j=1; j<hypPointsSize-1; j++){
             if( (fabs(sShadows.at(i).length()-hypPoints.at(j).length())<fabs(sShadows.at(i).length()-hypPoints.at(j-1).length()))&&(fabs(sShadows.at(i).length()-hypPoints.at(j).length())<fabs(sShadows.at(i).length()-hypPoints.at(j+1).length()))){

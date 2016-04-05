@@ -61,7 +61,7 @@ private:
 
     /*second step*/
     void loadSecondErrorData();
-    QPair<double, double> getSeconStepError(QList<double> params, QMap<QString, QPair<double, double> > *secondErrorMap, QMap<QString, QPair<double, double> > *rangeMap, double keysNum); //first:ave, second:std
+    QPair<double, double> getSeconStepError(QList<double> &params, QMap<QString, QPair<double, double> > *secondErrorMap, QMap<QString, QPair<double, double> > *rangeMap, double keysNum); //first:ave, second:std
     QMap<QString, QPair<double, double> > *secondErrorElevList, *secondErrorAzimuthList;
     QMap<QString, QPair<double, double> > *paramRange;
     int secondErrorElevListKeysNum, secondErrorAzimuthListKeysNum;

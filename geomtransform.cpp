@@ -14,7 +14,7 @@ QVector3D GeomTransform::descartes2Polar(QVector3D inputDescartes)
     return result;
 }
 
-QVector3D GeomTransform::polar2Descartes(QVector3D inputPolar)
+QVector3D GeomTransform::polar2Descartes(QVector3D &inputPolar)
 {
     QVector3D result;
     result.setX( inputPolar.x() * sin(inputPolar.y()) * cos(inputPolar.z()) );
@@ -61,9 +61,10 @@ QVector2D GeomTransform::descartes2Fisheye(QVector3D inputDescartes)
     return polar2Fisheye(descartes2Polar(inputDescartes));
 }
 
-QVector3D GeomTransform::fisheye2Descartes(QVector2D inputFisheye)
+QVector3D GeomTransform::fisheye2Descartes(QVector2D &inputFisheye)
 {
-    return polar2Descartes(fisheye2Polar(inputFisheye));
+    QVector3D polar = this->fisheye2Polar(inputFisheye);
+    return polar2Descartes(polar);
 }
 
 QVector3D GeomTransform::rotate(QVector3D v, QVector3D axis, double alpha)
@@ -78,7 +79,7 @@ QVector3D GeomTransform::rotate(QVector3D v, QVector3D axis, double alpha)
     return result;
 }
 
-QVector2D GeomTransform::rotate2D(QVector2D v, double alpha)
+QVector2D GeomTransform::rotate2D(QVector2D &v, double alpha)
 {
     QVector2D result;
     result.setX(v.x()*cos(alpha) - v.y()*sin(alpha));
