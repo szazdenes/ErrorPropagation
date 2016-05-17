@@ -40,6 +40,8 @@ public slots:
 
 private:
     GeomTransform transform;
+    QImage usedImage;
+    double usedpixels;
 
     void paint(QVector<QVector2D> &hyp_points, QVector<QVector2D> &to_paint, double r_min);
     QImage readImage(QString filename);
@@ -47,7 +49,7 @@ private:
     double getMinRadius(QVector<QVector2D> &hyperbola);
     QVector<QVector2D> readHyperbolaFromFile(QString filename);
     double getError(double deg_of_pol, int stein);
-    void writeDatFile(QString imname, QString hyperbola, QString timeOfDay, int stein, int p1_res, double p2_res, double deltoid_res, double second_error_res, double elev_res, QVector<int> &histogram, double north);
+    void writeDatFile(int usedpixels, QString imname, QString hyperbola, QString timeOfDay, int stein, int p1_res, double p2_res, double deltoid_res, double second_error_res, double elev_res, QVector<int> &histogram, double north);
     QVector3D detectSun(QImage &im);
     double detectNorth(QVector<QVector2D> &hyp_points, QVector3D &sun);
     QPair<QList<QVector3D>, QList<double> > calculatep2s(QImage &im, QVector3D &sun, QVector3D &p1, double min, double max, double res);

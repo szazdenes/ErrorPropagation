@@ -34,15 +34,16 @@ void EnhancedAllsteps::slotEnhAllStepsStart()
     QString hyp, hypname, picname, ampm;
     int picno;
 
-    int p1_resolution = 20;             // in pixels (20)
-    double p2_resolution = 15;          // in deg (15)
+    int p1_resolution = 30;             // in pixels (20)
+    double p2_resolution = 20;          // in deg (15)
     double deltoid_resolution = 9.0;    // (deltoid_points+1)**2 points (19)
     double elev_resolution = 0.2;       // in deg (0.2)
-    double second_resolution = 1.0;    // in deg (0.25)
+    double second_resolution = 0.5;    // in deg (0.25) .... currently not counted
 
     QDir folder = QFileDialog::getExistingDirectory();
-    QStringList nameList = folder.entryList(QStringList(), QDir::Files | QDir::NoDotAndDotDot);
+    QStringList nameList = folder.entryList(QStringList("*_gdeg_masked.tiff"), QDir::Files | QDir::NoDotAndDotDot);
     QStringList imageList;
+    QDir::setCurrent(folder.path());
     foreach(QString name, nameList)
         imageList.append(folder.absoluteFilePath(name));
 
@@ -51,12 +52,13 @@ void EnhancedAllsteps::slotEnhAllStepsStart()
         picname = imageList.at(picno);
 
         image = readImage(picname);
+        usedImage = image;
         QString imagename = QString(picname.split("/").last()).split(".").first();
 
-        for (int q = 1; q <= 1; q++) { // q = 1..4
+        for (int q = 1; q <= 1; q++) { // q = 1..3
             for (int yy = 1; yy <= 1; yy++) { // yy = 1..4
 
-                int stone = q;                      // 1 B, 2 C, 3 D, 4 E
+                int stone = q;                      // 1 calcite, 2 cordierite, 3 tourmaline
                 if (yy==1) {
                     hyp="/home/denes/Documents/Labor/Viking/ErrorPropagation/l61d0621am.dat";
                     hypname="sol";
@@ -86,11 +88,18 @@ void EnhancedAllsteps::slotEnhAllStepsStart()
                 QPair<QVector<QVector2D>, QVector<QVector2D> > sunShadowPoints;
                 QVector<int> hist(361);
 
+                usedpixels = 0;
+
                 hypPoints.clear();
                 hypPoints = readHyperbolaFromFile(hyp);
                 R_MIN = getMinRadius(hypPoints);
 
                 s = detectSun(image);
+
+                double s_elev = (Pi/2 - transform.descartes2Polar(s).y())/Pi*180.0;
+                if((yy == 3 || yy == 4) && s_elev > 29)
+                    break;
+
                 North = detectNorth(hypPoints, s);
                 toPaint.clear();
 
@@ -101,6 +110,8 @@ void EnhancedAllsteps::slotEnhAllStepsStart()
                     for(int j=0; j<imageHeight; j+=p1_resolution){
 
                         if( QColor(image.pixel(i,j)) != QColor(Qt::red) && QColor(image.pixel(i,j)) != QColor(Qt::green)){
+                            usedpixels++;
+                            usedImage.setPixelColor(i, j, Qt::blue);
                             QVector2D current_fisheye = transform.draw2Fisheye(QVector2D(i,j),imageWidth);
                             p1 = transform.fisheye2Descartes(current_fisheye);
                             deg_p1 = -(100.0/255.0)*qRed(image.pixel(i,j)) + 100;
@@ -130,6 +141,7 @@ void EnhancedAllsteps::slotEnhAllStepsStart()
                     QApplication::processEvents();
                     emit signalWriteToList(QString::number((int)((double)i/image.width()*100.0)) + " % of first error calculation ready");
                 }
+                usedImage.save(picname.remove(".tiff") + "_usedarea.png");
                 emit signalWriteToList("First error calculation ready");
                 secondErrorPoints_pol = getPointsFromSecondStep_pol(&firstErrorPoints_pol, second_resolution);
                 emit signalWriteToList("Second error calculation ready.");
@@ -147,9 +159,9 @@ void EnhancedAllsteps::slotEnhAllStepsStart()
                 hist = calculateNorthErrors(&sShadows, hypPoints, North);
                 emit signalWriteToList("North error calculation ready");
                 sShadows.clear();
-                paint(hypPoints, toPaint, R_MIN);
+//                paint(hypPoints, toPaint, R_MIN);
                 toPaint.clear();
-                writeDatFile(imagename, hypname, ampm, stone, p1_resolution, p2_resolution, deltoid_resolution, second_resolution, elev_resolution, hist, North);
+                writeDatFile(usedpixels, imagename, hypname, ampm, stone, p1_resolution, p2_resolution, deltoid_resolution, second_resolution, elev_resolution, hist, North);
 
                 QApplication::processEvents();
                 emit signalWriteToList(QTime::currentTime().toString());
@@ -258,19 +270,17 @@ double EnhancedAllsteps::getError(double deg_of_pol, int stein)
     }
 }
 
-void EnhancedAllsteps::writeDatFile(QString imname, QString hyperbola, QString timeOfDay, int stein, int p1_res, double p2_res, double deltoid_res, double second_error_res, double elev_res, QVector<int> &histogram, double north)
+void EnhancedAllsteps::writeDatFile(int usedpixels, QString imname, QString hyperbola, QString timeOfDay, int stein, int p1_res, double p2_res, double deltoid_res, double second_error_res, double elev_res, QVector<int> &histogram, double north)
 {
     QString s;
     if(stein == 1)
-        s = QString("B");
+        s = QString("cal");
     if(stein == 2)
-        s = QString("C");
+        s = QString("cord");
     if(stein == 3)
-        s = QString("D");
-    if(stein == 4)
-        s = QString("E");
+        s = QString("tour");
 
-    QString filename = imname + "_" + hyperbola + "_" + timeOfDay + "_" + s + "_" + QString::number(p1_res) + "px_" + QString::number(p2_res) + "deg_" + QString::number((deltoid_res+1)*(deltoid_res+1)) + "pts_" + QString::number(second_error_res) + "deg_" + QString::number(elev_res) + "deg";
+    QString filename = imname + "_" + hyperbola + "_" + timeOfDay + "_" + s + "_" + QString::number(p1_res) + "px_" + QString::number(p2_res) + "deg_" + QString::number((deltoid_res+1)*(deltoid_res+1)) + "pts_" /*+ QString::number(second_error_res) + "deg_"*/ + QString::number(elev_res) + "deg";
     QFile file(filename + ".csv");
     if (!file.open(QIODevice::WriteOnly))
         qDebug("baj");
@@ -278,6 +288,7 @@ void EnhancedAllsteps::writeDatFile(QString imname, QString hyperbola, QString t
 
     stream << "#N = " << histogram.at(360) << "\n";
     stream << "#North = " << north/Pi*180.0 << " deg\n";
+    stream << "#Used px ratio = " << QString::number(usedpixels/980100.0) << "\n"; //990*990
 
     int histSize = histogram.size();
     for (int i=0; i<histSize-1; i++)
@@ -362,8 +373,10 @@ QPair<QList<QVector3D>, QList<double> > EnhancedAllsteps::calculatep2s(QImage &i
                 k = (int)transform.fisheye2Draw(transform.descartes2Fisheye(v),imageWidth).x();
                 l = (int)transform.fisheye2Draw(transform.descartes2Fisheye(v),imageWidth).y();
                 if(k>=0 && k<imageWidth && l>=0 && l<imageWidth && QColor(im.pixel(k,l))!=QColor(Qt::red)){
-                     p2s_data.first.append(v);
-                     p2s_data.second.append(-(100.0/255.0)*qRed(im.pixel(k,l)) + 100);
+                    usedpixels++;
+                    usedImage.setPixelColor(k, l, Qt::blue);
+                    p2s_data.first.append(v);
+                    p2s_data.second.append(-(100.0/255.0)*qRed(im.pixel(k,l)) + 100);
                 }
             }
         }
@@ -534,7 +547,7 @@ QVector<QVector3D> EnhancedAllsteps::getPointsFromSecondStep_pol(QVector<QPair<Q
                         secondStepPoints.append(firstSecond_sun);
                     }
                 }
-                */
+*/
                 firstSecond_sun.setY(new_v_pol.y());
                 firstSecond_sun.setZ(new_v_pol.z());
                 secondStepPoints.append(firstSecond_sun);
@@ -560,7 +573,7 @@ QVector<QVector3D> EnhancedAllsteps::getPointsFromThirdStep_pol(QVector<QVector3
         foreach(QVector3D currentpoint, *secondErrorPoint_pol){
             double thirdError;
             double firstSecond_elev_deg = (Pi/2.0 - currentpoint.y()) * 180.0/Pi;
-            thirdError = 0.112482*pow(firstSecond_elev_deg, 0.784039);
+            thirdError = 0.112482*pow(firstSecond_elev_deg, 0.784039); //best
             if(thirdError < 0)
                 thirdError = 0;
 
@@ -625,7 +638,7 @@ void EnhancedAllsteps::loadSecondErrorData()
     secondErrorAzimuthList->clear();
     paramRange->clear();
 
-    QFile file("../result_ranges.csv");
+    QFile file("/home/denes/Documents/Labor/Viking/ErrorPropagation/result_ranges.csv");
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
         qDebug("cannot open");
     QTextStream stream(&file);
