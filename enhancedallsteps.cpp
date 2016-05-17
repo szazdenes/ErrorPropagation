@@ -241,25 +241,16 @@ QVector<QVector2D> EnhancedAllsteps::readHyperbolaFromFile(QString filename)
 
 double EnhancedAllsteps::getError(double deg_of_pol, int stein)
 {
-    if (stein == 1) {                                             // calcite B
-        if (deg_of_pol < 36.9)
-            return 22.5;
-        else
-            return 1 / ( (0.000421467) * deg_of_pol + 0.0131553 ) - 11.3618;
+    if (stein == 1) {                                             // calcite 2 contrast
+        return 1 / ( (0.00652452) * deg_of_pol + 0.0175308 ) + 4.71625;
     }
 
-    if (stein == 2) {                                              // calcite C
-        if (deg_of_pol < 7.1)
-            return 22.5;
-        else
-            return 1 / ( (0.0127314) * deg_of_pol - 0.0626234 ) + 6.49337;
+    if (stein == 2) {                                              // cordierite
+        return 1 / ( (0.00422263) * deg_of_pol + 0.0117355 ) + 0.55487;
     }
 
-    if (stein == 3)                                                // calcite D
-        return 1 / ( (0.0112355) * deg_of_pol - 0.3914 ) + 6.53672;
-
-    if (stein == 4)                                                // calcite E
-        return 1 / ( (0.00294135) * deg_of_pol + 0.0253163 ) + 2.57876;
+    if (stein == 3)                                                // tourmaline
+        return 1 / ( (0.00266655) * deg_of_pol + 0.0102908 ) - 0.669271;
 
     else{
         emit signalWriteToList("Not valid stone!");
