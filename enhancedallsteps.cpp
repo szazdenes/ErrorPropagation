@@ -47,16 +47,16 @@ void EnhancedAllsteps::slotEnhAllStepsStart()
     foreach(QString name, nameList)
         imageList.append(folder.absoluteFilePath(name));
 
-    for (picno=0; picno < 1/*imageList.size()*/; picno++) {
+    for (picno=0; picno < imageList.size(); picno++) {
 
         picname = imageList.at(picno);
 
         image = readImage(picname);
-        usedImage = image;
+
         QString imagename = QString(picname.split("/").last()).split(".").first();
 
-        for (int q = 1; q <= 1; q++) { // q = 1..3
-            for (int yy = 1; yy <= 1; yy++) { // yy = 1..4
+        for (int q = 1; q <= 3; q++) { // q = 1..3
+            for (int yy = 1; yy <= 4; yy++) { // yy = 1..4
 
                 int stone = q;                      // 1 calcite, 2 cordierite, 3 tourmaline
                 if (yy==1) {
@@ -88,6 +88,7 @@ void EnhancedAllsteps::slotEnhAllStepsStart()
                 QPair<QVector<QVector2D>, QVector<QVector2D> > sunShadowPoints;
                 QVector<int> hist(361);
 
+                usedImage = new QImage(picname);
                 usedpixels = 0;
 
                 hypPoints.clear();
@@ -111,7 +112,7 @@ void EnhancedAllsteps::slotEnhAllStepsStart()
 
                         if( QColor(image.pixel(i,j)) != QColor(Qt::red) && QColor(image.pixel(i,j)) != QColor(Qt::green)){
                             usedpixels++;
-                            usedImage.setPixelColor(i, j, Qt::blue);
+                            usedImage->setPixelColor(i, j, Qt::blue);
                             QVector2D current_fisheye = transform.draw2Fisheye(QVector2D(i,j),imageWidth);
                             p1 = transform.fisheye2Descartes(current_fisheye);
                             deg_p1 = -(100.0/255.0)*qRed(image.pixel(i,j)) + 100;
@@ -141,7 +142,8 @@ void EnhancedAllsteps::slotEnhAllStepsStart()
                     QApplication::processEvents();
                     emit signalWriteToList(QString::number((int)((double)i/image.width()*100.0)) + " % of first error calculation ready");
                 }
-                usedImage.save(picname.remove(".tiff") + "_usedarea.png");
+                usedImage->save(picname.remove(".tiff") + "_usedarea.png");
+                delete usedImage;
                 emit signalWriteToList("First error calculation ready");
                 secondErrorPoints_pol = getPointsFromSecondStep_pol(&firstErrorPoints_pol, second_resolution);
                 emit signalWriteToList("Second error calculation ready.");
@@ -374,7 +376,7 @@ QPair<QList<QVector3D>, QList<double> > EnhancedAllsteps::calculatep2s(QImage &i
                 l = (int)transform.fisheye2Draw(transform.descartes2Fisheye(v),imageWidth).y();
                 if(k>=0 && k<imageWidth && l>=0 && l<imageWidth && QColor(im.pixel(k,l))!=QColor(Qt::red)){
                     usedpixels++;
-                    usedImage.setPixelColor(k, l, Qt::blue);
+                    usedImage->setPixelColor(k, l, Qt::blue);
                     p2s_data.first.append(v);
                     p2s_data.second.append(-(100.0/255.0)*qRed(im.pixel(k,l)) + 100);
                 }

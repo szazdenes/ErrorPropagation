@@ -40,7 +40,7 @@ public slots:
 
 private:
     GeomTransform transform;
-    QImage usedImage;
+    QImage* usedImage;
     double usedpixels;
 
     void paint(QVector<QVector2D> &hyp_points, QVector<QVector2D> &to_paint, double r_min);
