@@ -43,7 +43,7 @@ private:
     QImage* usedImage;
     double usedpixels;
 
-    void paint(QVector<QVector2D> &hyp_points, QVector<QVector2D> &to_paint, double r_min);
+    void paint(QVector<QVector2D> &hyp_points, QVector<QVector2D> &to_paint, double r_min, QString name);
     QImage readImage(QString filename);
 
     double getMinRadius(QVector<QVector2D> &hyperbola);

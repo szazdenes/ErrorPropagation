@@ -34,9 +34,9 @@ void EnhancedAllsteps::slotEnhAllStepsStart()
     QString hyp, hypname, picname, ampm;
     int picno;
 
-    int p1_resolution = 30;             // in pixels (20)
-    double p2_resolution = 20;          // in deg (15)
-    double deltoid_resolution = 9.0;    // (deltoid_points+1)**2 points (19)
+    int p1_resolution = 30;             // in pixels (30)
+    double p2_resolution = 20;          // in deg (20)
+    double deltoid_resolution = 9.0;    // (deltoid_points+1)**2 points (9)
     double elev_resolution = 0.2;       // in deg (0.2)
     double second_resolution = 0.5;    // in deg (0.25) .... currently not counted
 
@@ -47,7 +47,7 @@ void EnhancedAllsteps::slotEnhAllStepsStart()
     foreach(QString name, nameList)
         imageList.append(folder.absoluteFilePath(name));
 
-    for (picno=0; picno < imageList.size(); picno++) {
+    for (picno = 5; picno < 6/*imageList.size()*/; picno++) { //starting from 0
 
         picname = imageList.at(picno);
 
@@ -161,7 +161,7 @@ void EnhancedAllsteps::slotEnhAllStepsStart()
                 hist = calculateNorthErrors(&sShadows, hypPoints, North);
                 emit signalWriteToList("North error calculation ready");
                 sShadows.clear();
-//                paint(hypPoints, toPaint, R_MIN);
+                paint(hypPoints, toPaint, R_MIN, QString(imageList.at(picno)).remove(".tiff") + QString::number(q) + hypname + ampm);
                 toPaint.clear();
                 writeDatFile(usedpixels, imagename, hypname, ampm, stone, p1_resolution, p2_resolution, deltoid_resolution, second_resolution, elev_resolution, hist, North);
 
@@ -179,7 +179,7 @@ void EnhancedAllsteps::slotEnhAllStepsStart()
 
 }
 
-void EnhancedAllsteps::paint(QVector<QVector2D> &hyp_points, QVector<QVector2D> &to_paint, double r_min)
+void EnhancedAllsteps::paint(QVector<QVector2D> &hyp_points, QVector<QVector2D> &to_paint, double r_min, QString name)
 {
     int size = 1355;
     QPainter painter;
@@ -206,7 +206,7 @@ void EnhancedAllsteps::paint(QVector<QVector2D> &hyp_points, QVector<QVector2D> 
         painter.drawPoint(size/2.0 + to_paint.at(q).x()*100, size/2.0 - to_paint.at(q).y()*100);
 
     painter.end();
-    im.save("a.png");
+    im.save(name + ".png");
 }
 
 QImage EnhancedAllsteps::readImage(QString filename)
