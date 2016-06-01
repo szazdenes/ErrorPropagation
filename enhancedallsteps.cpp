@@ -47,7 +47,7 @@ void EnhancedAllsteps::slotEnhAllStepsStart()
     foreach(QString name, nameList)
         imageList.append(folder.absoluteFilePath(name));
 
-    for (picno = 5; picno < 6/*imageList.size()*/; picno++) { //starting from 0
+    for (picno = 0; picno < imageList.size(); picno++) { //starting from 0
 
         picname = imageList.at(picno);
 
