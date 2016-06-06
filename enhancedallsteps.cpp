@@ -640,7 +640,7 @@ void EnhancedAllsteps::loadSecondErrorData()
     secondErrorAzimuthList->clear();
     paramRange->clear();
 
-    QFile file("/home/denes/Documents/Labor/Viking/ErrorPropagation/result_ranges.csv");
+    QFile file("/home/denes/Documents/Labor/Viking/ErrorPropagation/result_noantisun_ranges.csv");
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
         qDebug("cannot open");
     QTextStream stream(&file);
