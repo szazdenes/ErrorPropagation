@@ -34,12 +34,14 @@ void EnhancedAllsteps::slotEnhAllStepsStart()
     QString hyp, hypname, picname, ampm;
     int picno;
 
-    int p1_resolution = 30;             // in pixels (30)
-    double p2_resolution = 20;          // in deg (20)
+    int p1_resolution = 40;             // in pixels (30)
+    double p2_resolution = 30;          // in deg (20)
     double deltoid_resolution = 9.0;    // (deltoid_points+1)**2 points (9)
     double elev_resolution = 0.2;       // in deg (0.2)
     double azimuth_resolution = 0.2;    // in deg (0.2)
     double second_resolution = 0.25;    // in deg (0.25) .... currently not counted
+
+    qDebug("%d, %f, %f, %f, %f", p1_resolution, p2_resolution, deltoid_resolution, elev_resolution, azimuth_resolution);
 
     QDir folder = QFileDialog::getExistingDirectory();
     QStringList nameList = folder.entryList(QStringList("*_gdeg_masked.tiff"), QDir::Files | QDir::NoDotAndDotDot);
