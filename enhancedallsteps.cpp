@@ -38,7 +38,8 @@ void EnhancedAllsteps::slotEnhAllStepsStart()
     double p2_resolution = 20;          // in deg (20)
     double deltoid_resolution = 9.0;    // (deltoid_points+1)**2 points (9)
     double elev_resolution = 0.2;       // in deg (0.2)
-    double second_resolution = 0.5;    // in deg (0.25) .... currently not counted
+    double azimuth_resolution = 0.1;    // in deg (0.1)
+    double second_resolution = 0.25;    // in deg (0.25) .... currently not counted
 
     QDir folder = QFileDialog::getExistingDirectory();
     QStringList nameList = folder.entryList(QStringList("*_gdeg_masked.tiff"), QDir::Files | QDir::NoDotAndDotDot);
@@ -148,7 +149,7 @@ void EnhancedAllsteps::slotEnhAllStepsStart()
                 secondErrorPoints_pol = getPointsFromSecondStep_pol(&firstErrorPoints_pol, second_resolution);
                 emit signalWriteToList("Second error calculation ready.");
                 firstErrorPoints_pol.clear();
-                thirdErrorPoints_pol = getPointsFromThirdStep_pol(&secondErrorPoints_pol, elev_resolution);
+                thirdErrorPoints_pol = getPointsFromThirdAndFourthStep_pol(&secondErrorPoints_pol, elev_resolution, azimuth_resolution);
                 emit signalWriteToList("Third error calculation ready.");
                 secondErrorPoints_pol.clear();
                 sunShadowPoints = getSunShadows(&thirdErrorPoints_pol, R_MIN, North);
@@ -163,7 +164,7 @@ void EnhancedAllsteps::slotEnhAllStepsStart()
                 sShadows.clear();
                 paint(hypPoints, toPaint, R_MIN, QString(imageList.at(picno)).remove(".tiff") + QString::number(q) + hypname + ampm);
                 toPaint.clear();
-                writeDatFile(usedpixels, imagename, hypname, ampm, stone, p1_resolution, p2_resolution, deltoid_resolution, second_resolution, elev_resolution, hist, North);
+                writeDatFile(usedpixels, imagename, hypname, ampm, stone, p1_resolution, p2_resolution, deltoid_resolution, second_resolution, elev_resolution, azimuth_resolution, hist, North);
 
                 QApplication::processEvents();
                 emit signalWriteToList(QTime::currentTime().toString());
@@ -272,7 +273,7 @@ double EnhancedAllsteps::getError(double deg_of_pol, int stein)
     }
 }
 
-void EnhancedAllsteps::writeDatFile(int usedpixels, QString imname, QString hyperbola, QString timeOfDay, int stein, int p1_res, double p2_res, double deltoid_res, double second_error_res, double elev_res, QVector<int> &histogram, double north)
+void EnhancedAllsteps::writeDatFile(int usedpixels, QString imname, QString hyperbola, QString timeOfDay, int stein, int p1_res, double p2_res, double deltoid_res, double second_error_res, double elev_res, double azimuth_res, QVector<int> &histogram, double north)
 {
     QString s;
     if(stein == 1)
@@ -282,7 +283,7 @@ void EnhancedAllsteps::writeDatFile(int usedpixels, QString imname, QString hype
     if(stein == 3)
         s = QString("tour");
 
-    QString filename = imname + "_" + hyperbola + "_" + timeOfDay + "_" + s + "_" + QString::number(p1_res) + "px_" + QString::number(p2_res) + "deg_" + QString::number((deltoid_res+1)*(deltoid_res+1)) + "pts_" /*+ QString::number(second_error_res) + "deg_"*/ + QString::number(elev_res) + "deg";
+    QString filename = imname + "_" + hyperbola + "_" + timeOfDay + "_" + s + "_" + QString::number(p1_res) + "px_" + QString::number(p2_res) + "deg_" + QString::number((deltoid_res+1)*(deltoid_res+1)) + "pts_" /*+ QString::number(second_error_res) + "deg_"*/ + QString::number(elev_res) + "deg_" + QString::number(azimuth_res) + "deg";
     QFile file(filename + ".csv");
     if (!file.open(QIODevice::WriteOnly))
         qDebug("baj");
@@ -567,7 +568,7 @@ QVector<QVector3D> EnhancedAllsteps::getPointsFromSecondStep_pol(QVector<QPair<Q
     return secondStepPoints;
 }
 
-QVector<QVector3D> EnhancedAllsteps::getPointsFromThirdStep_pol(QVector<QVector3D> *secondErrorPoint_pol, double elev_res_deg)
+QVector<QVector3D> EnhancedAllsteps::getPointsFromThirdAndFourthStep_pol(QVector<QVector3D> *secondErrorPoint_pol, double elev_res_deg, double azimuth_res_deg)
 {
     QVector<QVector3D> thirdStepPoints;
     if(!secondErrorPoint_pol->isEmpty()){
@@ -581,7 +582,6 @@ QVector<QVector3D> EnhancedAllsteps::getPointsFromThirdStep_pol(QVector<QVector3
 
             QVector3D sunWithErrors;
             sunWithErrors.setX(currentpoint.x());
-            sunWithErrors.setZ(currentpoint.z());
 
             for(double elev = -thirdError; elev <= thirdError; elev += elev_res_deg){
                 sunWithErrors.setY(currentpoint.y() + elev*Pi/180.0);
@@ -589,7 +589,11 @@ QVector<QVector3D> EnhancedAllsteps::getPointsFromThirdStep_pol(QVector<QVector3
                     elev = -currentpoint.y()*180.0/Pi;
                     sunWithErrors.setY(currentpoint.y() + elev*Pi/180.0);
                 }
-                thirdStepPoints.append(sunWithErrors);
+                double azimuthError_deg = getAzimuthError(sunWithErrors.y()*180.0/Pi);
+                for(double azError = -azimuthError_deg; azError <= azimuthError_deg; azError += azimuth_res_deg){
+                    sunWithErrors.setZ(currentpoint.z() + azError*Pi/180.0);
+                    thirdStepPoints.append(sunWithErrors);
+                }
             }
             count++;
             QApplication::processEvents();
@@ -598,7 +602,7 @@ QVector<QVector3D> EnhancedAllsteps::getPointsFromThirdStep_pol(QVector<QVector3
         }
     }
     else{
-        emit signalWriteToList("Error in getPointsFromThirdStep_pol: condition not fulfilled.");
+        emit signalWriteToList("Error in getPointsFromThirdAndFourthStep_pol: condition not fulfilled.");
         thirdStepPoints.append(QVector3D(-999,-999,-999));
         return thirdStepPoints;
     }
@@ -632,6 +636,11 @@ QPair<QVector<QVector2D>, QVector<QVector2D> > EnhancedAllsteps::getSunShadows(Q
         return sunShadows;
     }
     return sunShadows;
+}
+
+double EnhancedAllsteps::getAzimuthError(double elevation)
+{
+    double result = 0.000238133*elevation*elevation + 1.1829;
 }
 
 void EnhancedAllsteps::loadSecondErrorData()
