@@ -38,7 +38,7 @@ void EnhancedAllsteps::slotEnhAllStepsStart()
     double p2_resolution = 20;          // in deg (20)
     double deltoid_resolution = 9.0;    // (deltoid_points+1)**2 points (9)
     double elev_resolution = 0.2;       // in deg (0.2)
-    double azimuth_resolution = 0.1;    // in deg (0.1)
+    double azimuth_resolution = 0.2;    // in deg (0.2)
     double second_resolution = 0.25;    // in deg (0.25) .... currently not counted
 
     QDir folder = QFileDialog::getExistingDirectory();
