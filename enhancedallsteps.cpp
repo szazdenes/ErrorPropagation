@@ -146,20 +146,20 @@ void EnhancedAllsteps::slotEnhAllStepsStart()
                 usedImage->save(picname.remove(".tiff") + "_usedarea.png");
                 delete usedImage;
                 emit signalWriteToList("First error calculation ready");
-                secondErrorPoints_pol = getPointsFromSecondStep_pol(&firstErrorPoints_pol, second_resolution);
+                secondErrorPoints_pol = getPointsFromSecondStep_pol(firstErrorPoints_pol, second_resolution);
                 emit signalWriteToList("Second error calculation ready.");
                 firstErrorPoints_pol.clear();
-                thirdErrorPoints_pol = getPointsFromThirdAndFourthStep_pol(&secondErrorPoints_pol, elev_resolution, azimuth_resolution);
+                thirdErrorPoints_pol = getPointsFromThirdAndFourthStep_pol(secondErrorPoints_pol, elev_resolution, azimuth_resolution);
                 emit signalWriteToList("Third error calculation ready.");
                 secondErrorPoints_pol.clear();
-                sunShadowPoints = getSunShadows(&thirdErrorPoints_pol, R_MIN, North);
+                sunShadowPoints = getSunShadows(thirdErrorPoints_pol, R_MIN, North);
                 sShadows = sunShadowPoints.first;
                 toPaint = sunShadowPoints.second;
                 emit signalWriteToList("Sun shadow calculation ready.");
                 thirdErrorPoints_pol.clear();
                 sunShadowPoints.first.clear();
                 sunShadowPoints.second.clear();
-                hist = calculateNorthErrors(&sShadows, hypPoints, North);
+                hist = calculateNorthErrors(sShadows, hypPoints, North);
                 emit signalWriteToList("North error calculation ready");
                 sShadows.clear();
                 paint(hypPoints, toPaint, R_MIN, QString(imageList.at(picno)).remove(".tiff") + QString::number(q) + hypname + ampm);
@@ -406,7 +406,7 @@ QVector3D EnhancedAllsteps::intersectionOfGreatCircles(QVector3D &GC1A, QVector3
     return result;
 }
 
-QVector<int> EnhancedAllsteps::calculateNorthErrors(QVector<QVector2D> *sun_shadows, QVector<QVector2D> &hyp_points, double north)
+QVector<int> EnhancedAllsteps::calculateNorthErrors(QVector<QVector2D> &sun_shadows, QVector<QVector2D> &hyp_points, double north)
 {
     QVector<int> histogram(361);
     QVector<double> nerrors;
@@ -415,20 +415,20 @@ QVector<int> EnhancedAllsteps::calculateNorthErrors(QVector<QVector2D> *sun_shad
     QVector2D INTERSECT;
     int h;
 
-    int sShadowsSize = sun_shadows->size();
+    int sShadowsSize = sun_shadows.size();
     int hyp_pointsSize = hyp_points.size();
 
     for(int i=0; i<sShadowsSize; i++){
         minimums.clear();
         nerrors.clear();
 
-        QVector2D current_shadow = sun_shadows->at(i);
-        sun_shadows->replace(i, transform.rotate2D(current_shadow, north));
+        QVector2D current_shadow = sun_shadows.at(i);
+        sun_shadows.replace(i, transform.rotate2D(current_shadow, north));
 
         for (int j=1; j<hyp_pointsSize-1; j++){
-            if( (fabs(sun_shadows->at(i).length()-hyp_points.at(j).length())<fabs(sun_shadows->at(i).length()-hyp_points.at(j-1).length()))&&(fabs(sun_shadows->at(i).length()-hyp_points.at(j).length())<fabs(sun_shadows->at(i).length()-hyp_points.at(j+1).length()))){
+            if( (fabs(sun_shadows.at(i).length()-hyp_points.at(j).length())<fabs(sun_shadows.at(i).length()-hyp_points.at(j-1).length()))&&(fabs(sun_shadows.at(i).length()-hyp_points.at(j).length())<fabs(sun_shadows.at(i).length()-hyp_points.at(j+1).length()))){
                 minimums.append(hyp_points.at(j));
-                nerrors.append(acos(QVector2D::dotProduct(hyp_points.at(j).normalized(), sun_shadows->at(i).normalized())));
+                nerrors.append(acos(QVector2D::dotProduct(hyp_points.at(j).normalized(), sun_shadows.at(i).normalized())));
             }
         }
 
@@ -443,7 +443,7 @@ QVector<int> EnhancedAllsteps::calculateNorthErrors(QVector<QVector2D> *sun_shad
                     NERROR = nerrors.at(j);
                 }
 
-            if (QVector3D::crossProduct(sun_shadows->at(i).toVector3D(), INTERSECT.toVector3D()).z() < 0)
+            if (QVector3D::crossProduct(sun_shadows.at(i).toVector3D(), INTERSECT.toVector3D()).z() < 0)
                 NERROR *= (-1.0);
 
             NERROR = NERROR/Pi*180.0;
@@ -508,11 +508,11 @@ QVector<QPair<QPair<QVector3D, QVector3D>, QVector3D> > EnhancedAllsteps::getInt
     return v_pol;
 }
 
-QVector<QVector3D> EnhancedAllsteps::getPointsFromSecondStep_pol(QVector<QPair<QPair<QVector3D, QVector3D>, QVector3D> > *intersectPoints_pol, double seconderror_resolution)
+QVector<QVector3D> EnhancedAllsteps::getPointsFromSecondStep_pol(QVector<QPair<QPair<QVector3D, QVector3D>, QVector3D> > &intersectPoints_pol, double seconderror_resolution)
 {
     QVector<QVector3D> secondStepPoints;
-    if(!intersectPoints_pol->isEmpty()){
-        int num = intersectPoints_pol->size();
+    if(!intersectPoints_pol.isEmpty()){
+        int num = intersectPoints_pol.size();
         QVector3D v_des;
         QPair<QPair<QVector3D, QVector3D>, QVector3D> currentPoint;
         QList<double> parameters;
@@ -520,7 +520,7 @@ QVector<QVector3D> EnhancedAllsteps::getPointsFromSecondStep_pol(QVector<QPair<Q
         QVector3D firstSecond_sun;
         QPair<double, double> secondElevErrors, secondAzimuthErrors;
         for(int i = 0; i < num; i++){
-            currentPoint = intersectPoints_pol->at(i);
+            currentPoint = intersectPoints_pol.at(i);
             double v_elev_deg = (Pi/2 - currentPoint.second.y())/Pi*180.0;
             v_des = transform.polar2Descartes(currentPoint.second);
             double delta_deg = acos(QVector3D::dotProduct(QVector3D::crossProduct(currentPoint.first.first, v_des).normalized(), QVector3D::crossProduct(currentPoint.first.second, v_des).normalized())) * 180.0/Pi;
@@ -568,12 +568,12 @@ QVector<QVector3D> EnhancedAllsteps::getPointsFromSecondStep_pol(QVector<QPair<Q
     return secondStepPoints;
 }
 
-QVector<QVector3D> EnhancedAllsteps::getPointsFromThirdAndFourthStep_pol(QVector<QVector3D> *secondErrorPoint_pol, double elev_res_deg, double azimuth_res_deg)
+QVector<QVector3D> EnhancedAllsteps::getPointsFromThirdAndFourthStep_pol(QVector<QVector3D> &secondErrorPoint_pol, double elev_res_deg, double azimuth_res_deg)
 {
     QVector<QVector3D> thirdStepPoints;
-    if(!secondErrorPoint_pol->isEmpty()){
+    if(!secondErrorPoint_pol.isEmpty()){
         double count=0;
-        foreach(QVector3D currentpoint, *secondErrorPoint_pol){
+        foreach(QVector3D currentpoint, secondErrorPoint_pol){
             double thirdError;
             double firstSecond_elev_deg = (Pi/2.0 - currentpoint.y()) * 180.0/Pi;
             thirdError = 0.112482*pow(firstSecond_elev_deg, 0.784039); //best
@@ -598,7 +598,7 @@ QVector<QVector3D> EnhancedAllsteps::getPointsFromThirdAndFourthStep_pol(QVector
             count++;
             QApplication::processEvents();
             if((int)count % 100000 == 0)
-                emit signalWriteToList("Third step " + QString::number(100*count/(double)secondErrorPoint_pol->size()) + " % ready.");
+                emit signalWriteToList("Third step " + QString::number(100*count/(double)secondErrorPoint_pol.size()) + " % ready.");
         }
     }
     else{
@@ -609,13 +609,13 @@ QVector<QVector3D> EnhancedAllsteps::getPointsFromThirdAndFourthStep_pol(QVector
     return thirdStepPoints;
 }
 
-QPair<QVector<QVector2D>, QVector<QVector2D> > EnhancedAllsteps::getSunShadows(QVector<QVector3D> *thirdErrorPoints_pol, double r_min, double north)
+QPair<QVector<QVector2D>, QVector<QVector2D> > EnhancedAllsteps::getSunShadows(QVector<QVector3D> &thirdErrorPoints_pol, double r_min, double north)
 {
     QPair<QVector<QVector2D>, QVector<QVector2D> > sunShadows;
     double count = 0;
-    if(!thirdErrorPoints_pol->isEmpty()){
+    if(!thirdErrorPoints_pol.isEmpty()){
         QVector2D projected, paint;
-        foreach(QVector3D currentpoint, *thirdErrorPoints_pol){
+        foreach(QVector3D currentpoint, thirdErrorPoints_pol){
             projected = QVector2D( tan(currentpoint.y())*cos(-currentpoint.z()) , tan(currentpoint.y())*sin(-currentpoint.z()) );
             if(currentpoint.y()<Pi/2.0-Pi/16.0  && projected.length()>r_min){ // horizonthoz ne legyen tul kozel (nagyon hosszu arnyek)
                 sunShadows.first.append(projected);
@@ -626,7 +626,7 @@ QPair<QVector<QVector2D>, QVector<QVector2D> > EnhancedAllsteps::getSunShadows(Q
             count++;
             QApplication::processEvents();
             if((int)count % 100000 == 0)
-                emit signalWriteToList("Sunshadow " + QString::number(100*count/(double)thirdErrorPoints_pol->size()) + " % ready.");
+                emit signalWriteToList("Sunshadow " + QString::number(100*count/(double)thirdErrorPoints_pol.size()) + " % ready.");
         }
     }
     else{
@@ -641,6 +641,7 @@ QPair<QVector<QVector2D>, QVector<QVector2D> > EnhancedAllsteps::getSunShadows(Q
 double EnhancedAllsteps::getAzimuthError(double elevation)
 {
     double result = 0.000238133*elevation*elevation + 1.1829;
+    return result;
 }
 
 void EnhancedAllsteps::loadSecondErrorData()

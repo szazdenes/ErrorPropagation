@@ -54,12 +54,12 @@ private:
     double detectNorth(QVector<QVector2D> &hyp_points, QVector3D &sun);
     QPair<QList<QVector3D>, QList<double> > calculatep2s(QImage &im, QVector3D &sun, QVector3D &p1, double min, double max, double res);
     QVector3D intersectionOfGreatCircles(QVector3D &GC1A, QVector3D &GC1B, QVector3D &GC2A, QVector3D &GC2B, QVector3D &sun);
-    QVector<int> calculateNorthErrors(QVector<QVector2D> *sun_shadows, QVector<QVector2D> &hyp_points, double north);
+    QVector<int> calculateNorthErrors(QVector<QVector2D> &sun_shadows, QVector<QVector2D> &hyp_points, double north);
 
     QVector<QPair<QPair<QVector3D, QVector3D>, QVector3D> > getIntersectionsFromFirstStep_pol(QList<QVector3D> &sunAndPoints, QList<double> &firstStepErrors, QVector3D &sun); //sunAndPoint 0: sun 1: point1 2: point2, firstStepErrors 0: error1 1: error2 2: deltoid_res
-    QVector<QVector3D> getPointsFromSecondStep_pol(QVector<QPair<QPair<QVector3D, QVector3D>, QVector3D> > *intersectPoints_pol, double seconderror_resolution);
-    QVector<QVector3D> getPointsFromThirdAndFourthStep_pol(QVector<QVector3D> *secondErrorPoint_pol, double elev_res_deg, double azimuth_res_deg);
-    QPair<QVector<QVector2D>, QVector<QVector2D> > getSunShadows(QVector<QVector3D> *thirdErrorPoints_pol, double r_min, double north); //first: sunShadow, second: toPaint
+    QVector<QVector3D> getPointsFromSecondStep_pol(QVector<QPair<QPair<QVector3D, QVector3D>, QVector3D> > &intersectPoints_pol, double seconderror_resolution);
+    QVector<QVector3D> getPointsFromThirdAndFourthStep_pol(QVector<QVector3D> &secondErrorPoint_pol, double elev_res_deg, double azimuth_res_deg);
+    QPair<QVector<QVector2D>, QVector<QVector2D> > getSunShadows(QVector<QVector3D> &thirdErrorPoints_pol, double r_min, double north); //first: sunShadow, second: toPaint
     double getAzimuthError(double elevation);
 
     /*second step*/
